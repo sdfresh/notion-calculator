@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Mundane Manual | Rice → CVG</title>
+<title>Rice → CVG</title>
 <style>
   :root{--t:#222;--m:#666;--g:#e8e8e8;--bg:#fafafa}
   *{box-sizing:border-box;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
@@ -13,26 +13,42 @@
   .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
   @media(max-width:720px){.grid{grid-template-columns:1fr}}
   label{font-size:12px;color:var(--m);display:block;margin-bottom:6px}
-  input,select{width:100%;padding:10px 12px;border:1px solid var(--g);border-radius:10px;background:#fff;font-size:14px}
-  .cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+  input{width:100%;padding:10px 12px;border:1px solid var(--g);border-radius:10px;background:#fff;font-size:14px}
+  .cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
   @media(max-width:720px){.cards{grid-template-columns:1fr}}
   .card{background:#fff;border:1px solid var(--g);border-radius:14px;padding:14px}
   .k{font-size:11px;color:var(--m);text-transform:uppercase;letter-spacing:.06em}
   .v{font-size:20px;font-weight:600;margin-top:4px}
   .row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:8px}
-  .btns{display:flex;gap:8px;margin-top:12px}
-  button{border:1px solid var(--g);background:#fff;border-radius:10px;padding:10px 12px;cursor:pointer}
   .note{font-size:12px;color:var(--m);margin-top:10px}
-  .err{display:none;margin-top:10px;color:#b00020;font-size:13px}
 </style>
 </head>
 <body>
 <div class="wrap">
   <h1>Rice Volume & CVG</h1>
-  <p class="note">CVG is gross container volume after packing efficiency. Defaults suit uncooked white rice. Adjust as needed.</p>
+  <p class="note">CVG is gross container volume after packing efficiency. Defaults suit uncooked white rice.</p>
 
   <div class="grid">
     <div><label>Number of bags</label><input id="bags" type="number" min="0" step="1" value="10"></div>
     <div><label>Size per bag, kg</label><input id="kgPerBag" type="number" min="0" step="0.1" value="5"></div>
     <div><label>Bulk density, g/cm³ (typ. 0.80–0.90)</label><input id="rho" type="number" min="0.01" step="0.01" value="0.85"></div>
-    <div><label>Packing efficiency, %</label><input id="eff" type="number"
+    <div><label>Packing efficiency, %</label><input id="eff" type="number" min="1" max="100" step="1" value="92"></div>
+  </div>
+
+  <div class="cards">
+    <div class="card">
+      <div class="k">Total mass</div>
+      <div class="v" id="massKg">–</div>
+      <div class="row">
+        <div><div class="k">Bags</div><div class="v" id="bagsOut">–</div></div>
+        <div><div class="k">kg / bag</div><div class="v" id="kgPerBagOut">–</div></div>
+        <div><div class="k">Density</div><div class="v" id="rhoOut">–</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="k">Loose volume (no packing)</div>
+      <div class="v" id="looseMain">–</div>
+      <div class="row">
+        <div><div class="k">cm³</div><div class="v" id="looseCm3">–</div></div>
+        <div><div class="k">L</div><div class="v" id="looseL">–</div></div>
