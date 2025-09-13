@@ -23,6 +23,7 @@
   .btns{display:flex;gap:8px;margin-top:12px}
   button{border:1px solid var(--g);background:#fff;border-radius:10px;padding:10px 12px;cursor:pointer}
   .note{font-size:12px;color:var(--m);margin-top:10px}
+  .err{display:none;margin-top:10px;color:#b00020;font-size:13px}
 </style>
 </head>
 <body>
@@ -34,114 +35,4 @@
     <div><label>Number of bags</label><input id="bags" type="number" min="0" step="1" value="10"></div>
     <div><label>Size per bag, kg</label><input id="kgPerBag" type="number" min="0" step="0.1" value="5"></div>
     <div><label>Bulk density, g/cm³ (typ. 0.80–0.90)</label><input id="rho" type="number" min="0.01" step="0.01" value="0.85"></div>
-    <div><label>Packing efficiency, %</label><input id="eff" type="number" min="1" max="100" step="1" value="92"></div>
-    <div><label>Expansion multiplier (optional, e.g. cooked ≈ 3)</label><input id="exp" type="number" min="0.1" step="0.1" value="1"></div>
-    <div><label>Primary output unit</label>
-      <select id="unit">
-        <option value="cm3">cm³</option><option value="L">L</option>
-        <option value="m3">m³</option><option value="ft3">ft³</option>
-      </select>
-    </div>
-  </div>
-
-  <div class="btns">
-    <button id="copy">Copy summary</button>
-    <button id="reset">Reset</button>
-  </div>
-
-  <div class="cards">
-    <div class="card">
-      <div class="k">Total mass</div><div class="v" id="massKg">–</div>
-      <div class="row">
-        <div><div class="k">Bags</div><div class="v" id="bagsOut">–</div></div>
-        <div><div class="k">kg / bag</div><div class="v" id="kgPerBagOut">–</div></div>
-        <div><div class="k">Density</div><div class="v" id="rhoOut">–</div></div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="k">Loose volume (no packing)</div><div class="v" id="looseMain">–</div>
-      <div class="row">
-        <div><div class="k">cm³</div><div class="v" id="looseCm3">–</div></div>
-        <div><div class="k">L</div><div class="v" id="looseL">–</div></div>
-        <div><div class="k">m³</div><div class="v" id="looseM3">–</div></div>
-      </div>
-      <div class="row" style="margin-top:8px">
-        <div><div class="k">ft³</div><div class="v" id="looseFt3">–</div></div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="k">CVG, Container Volume, Gross</div><div class="v" id="cvgMain">–</div>
-      <div class="row">
-        <div><div class="k">cm³</div><div class="v" id="cvgCm3">–</div></div>
-        <div><div class="k">L</div><div class="v" id="cvgL">–</div></div>
-        <div><div class="k">m³</div><div class="v" id="cvgM3">–</div></div>
-      </div>
-      <div class="row" style="margin-top:8px">
-        <div><div class="k">ft³</div><div class="v" id="cvgFt3">–</div></div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="k">Assumptions</div>
-      <ul style="margin:8px 0 0 18px;padding:0;font-size:13px;color:#333">
-        <li>Mass = bags × kg per bag.</li>
-        <li>Loose cm³ = (mass kg × 1000) ÷ density g/cm³ × expansion.</li>
-        <li>CVG cm³ = loose cm³ ÷ (packing % ÷ 100).</li>
-      </ul>
-    </div>
-  </div>
-
-  <p class="note">Tip, set expansion = 1 for storage, ≈3 for cooked-volume planning.</p>
-</div>
-
-<script>
-const $ = id => document.getElementById(id);
-const fmt = n => !isFinite(n) ? "–" :
-  Math.abs(n) >= 1e6 || Math.abs(n) < 1e-3 ? n.toExponential(3) :
-  n.toLocaleString(undefined,{maximumFractionDigits:3});
-
-function calc(){
-  const bags = Number($("bags").value)||0;
-  const kgPerBag = Number($("kgPerBag").value)||0;
-  const rho = Number($("rho").value)||0;       // g/cm³
-  const eff = Math.min(100, Math.max(1, Number($("eff").value)||100));
-  const exp = Number($("exp").value)||1;
-  const unit = $("unit").value;
-
-  const massKg = bags * kgPerBag;
-  const loose_cm3 = rho>0 ? (massKg*1000)/rho*exp : 0;
-  const loose_L = loose_cm3/1000;
-  const loose_m3 = loose_cm3/1_000_000;
-  const loose_ft3 = loose_m3*35.3146667;
-
-  const cvg_cm3 = loose_cm3/(eff/100);
-  const cvg_L = cvg_cm3/1000;
-  const cvg_m3 = cvg_cm3/1_000_000;
-  const cvg_ft3 = cvg_m3*35.3146667;
-
-  const pick = (u, cm3, L, m3, ft3) =>
-    u==="cm3"?fmt(cm3)+" cm³":u==="L"?fmt(L)+" L":u==="m3"?fmt(m3)+" m³":fmt(ft3)+" ft³";
-
-  $("massKg").textContent = fmt(massKg) + " kg";
-  $("bagsOut").textContent = fmt(bags);
-  $("kgPerBagOut").textContent = fmt(kgPerBag);
-  $("rhoOut").textContent = rho ? rho.toFixed(2) : "–";
-
-  $("looseMain").textContent = pick(unit, loose_cm3, loose_L, loose_m3, loose_ft3);
-  $("looseCm3").textContent = fmt(loose_cm3);
-  $("looseL").textContent = fmt(loose_L);
-  $("looseM3").textContent = fmt(loose_m3);
-  $("looseFt3").textContent = fmt(loose_ft3);
-
-  $("cvgMain").textContent = pick(unit, cvg_cm3, cvg_L, cvg_m3, cvg_ft3);
-  $("cvgCm3").textContent = fmt(cvg_cm3);
-  $("cvgL").textContent = fmt(cvg_L);
-  $("cvgM3").textContent = fmt(cvg_m3);
-  $("cvgFt3").textContent = fmt(cvg_ft3);
-
-  window._last={bags,kgPerBag,rho,eff,exp,massKg,loose_cm3,loose_L,loose_m3,loose_ft3,cvg_cm3,cvg_L,cvg_m3,cvg_ft3};
-}
-["bags","kgPerBag","rho","eff","exp","unit"].forEach(id=>{
-  $(id).addEventListener
+    <div><label>Packing efficiency, %</label><input id="eff" type="number"
