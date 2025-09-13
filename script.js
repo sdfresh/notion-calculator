@@ -1,30 +1,34 @@
 (function () {
   "use strict";
-  const $ = (id) => document.getElementById(id);
-  const num = (v) => parseFloat(String(v ?? "").trim()) || 0;
-  const fmt = (n) =>
-    !isFinite(n)
-      ? "–"
-      : Math.abs(n) >= 1e6 || Math.abs(n) < 1e-3
-      ? n.toExponential(3)
-      : n.toLocaleString(undefined, { maximumFractionDigits: 3 });
+  function $(id) { return document.getElementById(id); }
+  function num(v) {
+    v = (v == null ? "" : String(v)).trim();
+    var n = parseFloat(v);
+    return isNaN(n) ? 0 : n;
+  }
+  function fmt(n) {
+    if (!isFinite(n)) return "–";
+    if (Math.abs(n) >= 1000000 || Math.abs(n) < 0.001) return n.toExponential(3);
+    return n.toLocaleString(undefined, { maximumFractionDigits: 3 });
+  }
 
   function compute() {
-    const bags = num($("bags").value);
-    const kgPerBag = num($("kgPerBag").value);
-    const rho = num($("rho").value);          // g/cm³
-    const eff = Math.min(100, Math.max(1, num($("eff").value) || 100));
+    var bags = num($("bags").value);
+    var kgPerBag = num($("kgPerBag").value);
+    var rho = num($("rho").value);          // g/cm³
+    var eff = num($("eff").value);
+    if (eff <= 0 || eff > 100) eff = 100;
 
-    const massKg = bags * kgPerBag;
-    const loose_cm3 = rho > 0 ? (massKg * 1000) / rho : 0;
-    const loose_L = loose_cm3 / 1000;
-    const loose_m3 = loose_cm3 / 1_000_000;
-    const loose_ft3 = loose_m3 * 35.3146667;
+    var massKg = bags * kgPerBag;
+    var loose_cm3 = rho > 0 ? (massKg * 1000) / rho : 0;
+    var loose_L   = loose_cm3 / 1000;
+    var loose_m3  = loose_cm3 / 1000000;
+    var loose_ft3 = loose_m3 * 35.3146667;
 
-    const cvg_cm3 = loose_cm3 / (eff / 100);
-    const cvg_L = cvg_cm3 / 1000;
-    const cvg_m3 = cvg_cm3 / 1_000_000;
-    const cvg_ft3 = cvg_m3 * 35.3146667;
+    var cvg_cm3 = loose_cm3 / (eff / 100);
+    var cvg_L   = cvg_cm3 / 1000;
+    var cvg_m3  = cvg_cm3 / 1000000;
+    var cvg_ft3 = cvg_m3 * 35.3146667;
 
     $("massKg").textContent = fmt(massKg) + " kg";
     $("bagsOut").textContent = fmt(bags);
@@ -45,13 +49,17 @@
   }
 
   function init() {
-    ["bags", "kgPerBag", "rho", "eff"].forEach((id) => {
+    ["bags", "kgPerBag", "rho", "eff"].forEach(function (id) {
       $(id).addEventListener("input", compute);
       $(id).addEventListener("change", compute);
       $(id).addEventListener("keyup", compute);
     });
-    compute(); // initial render
+    compute(); // first render
   }
 
-  window.addEventListener("DOMContentLoaded", init);
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
 })();
