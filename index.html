@@ -1,54 +1,57 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Rice → CVG</title>
-<style>
-  :root{--t:#222;--m:#666;--g:#e8e8e8;--bg:#fafafa}
-  *{box-sizing:border-box;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
-  body{margin:0;background:var(--bg);color:var(--t);padding:20px}
-  .wrap{max-width:760px;margin:0 auto}
-  h1{font-size:20px;margin:0 0 8px}
-  .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-  @media(max-width:720px){.grid{grid-template-columns:1fr}}
-  label{font-size:12px;color:var(--m);display:block;margin-bottom:6px}
-  input{width:100%;padding:10px 12px;border:1px solid var(--g);border-radius:10px;background:#fff;font-size:14px}
-  .cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
-  @media(max-width:720px){.cards{grid-template-columns:1fr}}
-  .card{background:#fff;border:1px solid var(--g);border-radius:14px;padding:14px}
-  .k{font-size:11px;color:var(--m);text-transform:uppercase;letter-spacing:.06em}
-  .v{font-size:20px;font-weight:600;margin-top:4px}
-  .row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:8px}
-  .note{font-size:12px;color:var(--m);margin-top:10px}
-</style>
-</head>
-<body>
-<div class="wrap">
-  <h1>Rice Volume & CVG</h1>
-  <p class="note">CVG is gross container volume after packing efficiency. Defaults suit uncooked white rice.</p>
+(function () {
+  "use strict";
+  const $ = (id) => document.getElementById(id);
+  const num = (v) => parseFloat(String(v ?? "").trim()) || 0;
+  const fmt = (n) =>
+    !isFinite(n)
+      ? "–"
+      : Math.abs(n) >= 1e6 || Math.abs(n) < 1e-3
+      ? n.toExponential(3)
+      : n.toLocaleString(undefined, { maximumFractionDigits: 3 });
 
-  <div class="grid">
-    <div><label>Number of bags</label><input id="bags" type="number" min="0" step="1" value="10"></div>
-    <div><label>Size per bag, kg</label><input id="kgPerBag" type="number" min="0" step="0.1" value="5"></div>
-    <div><label>Bulk density, g/cm³ (typ. 0.80–0.90)</label><input id="rho" type="number" min="0.01" step="0.01" value="0.85"></div>
-    <div><label>Packing efficiency, %</label><input id="eff" type="number" min="1" max="100" step="1" value="92"></div>
-  </div>
+  function compute() {
+    const bags = num($("bags").value);
+    const kgPerBag = num($("kgPerBag").value);
+    const rho = num($("rho").value);          // g/cm³
+    const eff = Math.min(100, Math.max(1, num($("eff").value) || 100));
 
-  <div class="cards">
-    <div class="card">
-      <div class="k">Total mass</div>
-      <div class="v" id="massKg">–</div>
-      <div class="row">
-        <div><div class="k">Bags</div><div class="v" id="bagsOut">–</div></div>
-        <div><div class="k">kg / bag</div><div class="v" id="kgPerBagOut">–</div></div>
-        <div><div class="k">Density</div><div class="v" id="rhoOut">–</div></div>
-      </div>
-    </div>
+    const massKg = bags * kgPerBag;
+    const loose_cm3 = rho > 0 ? (massKg * 1000) / rho : 0;
+    const loose_L = loose_cm3 / 1000;
+    const loose_m3 = loose_cm3 / 1_000_000;
+    const loose_ft3 = loose_m3 * 35.3146667;
 
-    <div class="card">
-      <div class="k">Loose volume (no packing)</div>
-      <div class="v" id="looseMain">–</div>
-      <div class="row">
-        <div><div class="k">cm³</div><div class="v" id="looseCm3">–</div></div>
-        <div><div class="k">L</div><div class="v" id="looseL">–</div></div>
+    const cvg_cm3 = loose_cm3 / (eff / 100);
+    const cvg_L = cvg_cm3 / 1000;
+    const cvg_m3 = cvg_cm3 / 1_000_000;
+    const cvg_ft3 = cvg_m3 * 35.3146667;
+
+    $("massKg").textContent = fmt(massKg) + " kg";
+    $("bagsOut").textContent = fmt(bags);
+    $("kgPerBagOut").textContent = fmt(kgPerBag);
+    $("rhoOut").textContent = rho ? rho.toFixed(2) : "–";
+
+    $("looseMain").textContent = fmt(loose_cm3) + " cm³";
+    $("looseCm3").textContent = fmt(loose_cm3);
+    $("looseL").textContent = fmt(loose_L);
+    $("looseM3").textContent = fmt(loose_m3);
+    $("looseFt3").textContent = fmt(loose_ft3);
+
+    $("cvgMain").textContent = fmt(cvg_cm3) + " cm³";
+    $("cvgCm3").textContent = fmt(cvg_cm3);
+    $("cvgL").textContent = fmt(cvg_L);
+    $("cvgM3").textContent = fmt(cvg_m3);
+    $("cvgFt3").textContent = fmt(cvg_ft3);
+  }
+
+  function init() {
+    ["bags", "kgPerBag", "rho", "eff"].forEach((id) => {
+      $(id).addEventListener("input", compute);
+      $(id).addEventListener("change", compute);
+      $(id).addEventListener("keyup", compute);
+    });
+    compute(); // initial render
+  }
+
+  window.addEventListener("DOMContentLoaded", init);
+})();
